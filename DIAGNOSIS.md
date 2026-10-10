@@ -118,3 +118,31 @@ So reliable injection needs two things, in order:
    microcode after a few frames. Likely the injected frames carry a rate or
    TX_CMD format the firmware rejects. This is the W3.2 (honour radiotap rate)
    and W4 (firmware limits) work.
+
+## M3.3: isolated and fixed the firmware assert — 2026-10-10
+
+With `iwlwifi.inject=1`, a controlled single-frame-type injector (one 802.11
+type per batch, on a dedicated ch36 monitor) isolated the assert cleanly:
+
+```
+probe : ring_delta=15  assert=0
+auth  : ring_delta=15  assert=0
+data  : ring_delta=15  assert=0
+rts   : ring_delta=2    assert=1   <- ADVANCED_SYSASSERT 0x4217
+```
+
+The firmware asserts only on **raw control frames** (RTS, `fc=0x00b4`) injected
+on the stationless sniffer context. Management, authentication and data frames
+inject fine, 15 of 15 to the TX ring, no assert. aireplay-ng `-9` crashed the
+firmware only because its test sequence includes control frames.
+
+Fix (in `iwl_mvm_tx_skb_non_sta`, inject mode only): drop injected control
+frames before they reach the firmware. After the fix the `rts` batch is dropped
+cleanly (`ring_delta=0 assert=0`) while probe/auth/data still inject 15/15.
+
+Net result: management and data frame injection works on the AX201,
+unassociated, on ch36, without destabilising the firmware. Control-frame
+injection is intentionally not supported (the firmware rejects it; the firmware
+generates its own control frames anyway).
+
+Harnesses: `m3-isolate.sh` (per-type isolation) with a stdlib radiotap injector.
