@@ -22,11 +22,15 @@ existing stationless (sniffer/aux) queue so they reach the air. See
 - **M3.2 (reg)** – `iwlwifi.inject` param (default off) withholds `NO_IR`.
   Done: with it, ch36 loses `No IR` and injected frames reach the firmware
   (0 → 11 TX-ring events); ch9 already worked.
-- **In progress** – injection on the sniffer queue triggers a firmware
-  `Microcode SW error` after a few frames, on both bands. Honouring the
-  radiotap rate / TX_CMD and probing firmware limits is the next work.
-- **M4** – reliable unassociated injection captured on a second radio. Blocked
-  on the firmware-crash fix above.
+- **M3.3 (firmware stability)** – Done. Isolated the `Microcode SW error`
+  (`ADVANCED_SYSASSERT 0x4217`) to **raw control frames** injected on the
+  stationless sniffer context; management, auth and data frames inject cleanly
+  (15/15 to the TX ring, no assert). The driver now drops injected control
+  frames in inject mode to protect the firmware. Result: mgmt + data injection
+  works, unassociated, on ch36.
+- **M4** – reliable unassociated injection independently captured on a second
+  radio. Mechanism proven (frames on the TX ring + aireplay "Injection is
+  working!"); a dedicated capture radio is still needed for the final proof.
 
 ## Licence
 

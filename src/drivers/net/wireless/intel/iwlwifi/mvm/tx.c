@@ -791,6 +791,23 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
 
 	memcpy(&info, skb->cb, sizeof(info));
 
+	/*
+	 * inject: raw control frames (e.g. RTS) injected on the stationless
+	 * sniffer/aux context make the firmware assert (ADVANCED_SYSASSERT
+	 * 0x4217). Management and data injection is fine. Drop injected control
+	 * frames here to protect the firmware; only in inject mode, so stock
+	 * behaviour is unchanged.
+	 */
+	if (unlikely(iwlwifi_mod_params.inject &&
+		     (info.flags & IEEE80211_TX_CTL_INJECTED) &&
+		     ieee80211_is_ctl(fc))) {
+		if (unlikely(iwlmvm_mod_params.inject_dbg))
+			IWL_WARN(mvm,
+				 "inject: dropping injected control frame fc=0x%04x (would assert fw)\n",
+				 le16_to_cpu(fc));
+		return -1;
+	}
+
 	if (WARN_ON_ONCE(skb->len > IEEE80211_MAX_DATA_LEN + hdrlen))
 		return -1;
 
