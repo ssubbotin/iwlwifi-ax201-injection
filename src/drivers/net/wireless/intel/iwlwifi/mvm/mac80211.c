@@ -802,6 +802,14 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
 static void iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
 			   struct ieee80211_sta *sta)
 {
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+	bool inj_dbg = unlikely(iwlmvm_mod_params.inject_dbg &&
+				(info->flags & IEEE80211_TX_CTL_INJECTED));
+
+	if (inj_dbg)
+		IWL_WARN(mvm, "inject: tx_skb sta=%s\n",
+			 sta ? "set" : "NULL(non_sta)");
+
 	if (likely(sta)) {
 		if (likely(iwl_mvm_tx_skb_sta(mvm, skb, sta) == 0))
 			return;
@@ -809,6 +817,10 @@ static void iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
 		if (likely(iwl_mvm_tx_skb_non_sta(mvm, skb) == 0))
 			return;
 	}
+
+	if (inj_dbg)
+		IWL_WARN(mvm, "inject: tx_skb DROP (free_txskb), sta=%s\n",
+			 sta ? "set" : "NULL");
 
 	ieee80211_free_txskb(mvm->hw, skb);
 }
@@ -825,16 +837,31 @@ void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
 	u32 link_id = u32_get_bits(info->control.flags,
 				   IEEE80211_TX_CTRL_MLO_LINK);
 	struct ieee80211_sta *tmp_sta = sta;
+	bool inj_dbg = unlikely(iwlmvm_mod_params.inject_dbg &&
+				(info->flags & IEEE80211_TX_CTL_INJECTED));
+
+	if (inj_dbg)
+		IWL_WARN(mvm,
+			 "inject: mac_tx fc=0x%04x viftype=%d sta=%s offchan=%d radio_killed=%d\n",
+			 le16_to_cpu(hdr->frame_control),
+			 info->control.vif ? (int)info->control.vif->type : -1,
+			 sta ? "set" : "NULL", offchannel,
+			 iwl_mvm_is_radio_killed(mvm));
 
 	if (iwl_mvm_is_radio_killed(mvm)) {
 		IWL_DEBUG_DROP(mvm, "Dropping - RF/CT KILL\n");
+		if (inj_dbg)
+			IWL_WARN(mvm, "inject: DROP radio_killed\n");
 		goto drop;
 	}
 
 	if (offchannel &&
 	    !test_bit(IWL_MVM_STATUS_ROC_P2P_RUNNING, &mvm->status) &&
-	    !test_bit(IWL_MVM_STATUS_ROC_AUX_RUNNING, &mvm->status))
+	    !test_bit(IWL_MVM_STATUS_ROC_AUX_RUNNING, &mvm->status)) {
+		if (inj_dbg)
+			IWL_WARN(mvm, "inject: DROP offchannel (ROC not running)\n");
 		goto drop;
+	}
 
 	/*
 	 * bufferable MMPDUs or MMPDUs on STA interfaces come via TXQs
@@ -845,8 +872,11 @@ void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
 
 	/* this shouldn't even happen: just drop */
 	if (!sta && info->control.vif->type == NL80211_IFTYPE_STATION &&
-	    !offchannel)
+	    !offchannel) {
+		if (inj_dbg)
+			IWL_WARN(mvm, "inject: DROP station-vif no-sta\n");
 		goto drop;
+	}
 
 	if (tmp_sta && !sta && link_id != IEEE80211_LINK_UNSPECIFIED &&
 	    !ieee80211_is_probe_resp(hdr->frame_control)) {
