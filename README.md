@@ -28,9 +28,10 @@ existing stationless (sniffer/aux) queue so they reach the air. See
   (15/15 to the TX ring, no assert). The driver now drops injected control
   frames in inject mode to protect the firmware. Result: mgmt + data injection
   works, unassociated, on ch36.
-- **M4** – reliable unassociated injection independently captured on a second
-  radio. Mechanism proven (frames on the TX ring + aireplay "Injection is
-  working!"); a dedicated capture radio is still needed for the final proof.
+- **M4** – Done. Injected, uniquely-tagged frames (SSID `INJTEST-M4`, source
+  `02:de:ad:be:ef:01`) sent from the AX201 monitor interface, **unassociated**,
+  were captured over the air by an independent radio (an OpenWrt router in
+  dedicated monitor mode), at real RF signal (~-48 dBm). End-to-end goal met.
 
 ## Licence
 
