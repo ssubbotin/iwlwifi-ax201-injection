@@ -146,3 +146,29 @@ injection is intentionally not supported (the firmware rejects it; the firmware
 generates its own control frames anyway).
 
 Harnesses: `m3-isolate.sh` (per-type isolation) with a stdlib radiotap injector.
+
+## M4: independent on-air capture — 2026-10-10
+
+End-to-end proof. The AX201 injected 120 uniquely-tagged probe requests (SSID
+`INJTEST-M4`, source `02:de:ad:be:ef:01`) from a dedicated monitor interface,
+**unassociated**, on 2.4 GHz ch9, with `iwlwifi.inject=1`. An independent radio
+(the OpenWrt router's 2.4 GHz adapter put in a dedicated monitor, AP down) was
+sniffing ch9 and captured them:
+
+```
+17:19:21.988503 1.0 Mb/s 2452 MHz 11b -50dBm signal BSSID:ff:ff:ff:ff:ff:ff \
+  DA:ff:ff:ff:ff:ff:ff SA:02:de:ad:be:ef:01 Probe Request (INJTEST-M4) ...
+```
+
+224 frames from our injected source address were recorded at real RF signal
+(~-48 dBm). A frame crafted on the laptop left the AX201 radio and was received
+by a separate device: injection works end to end.
+
+Harness: `m4-inject.sh` (laptop side) + a detached, self-restoring capture on
+the router that dedicates its 2.4 GHz radio to monitor, records, then restores
+the AP. Injector: `tools/inject.py` (stdlib radiotap frame builder).
+
+Notes: the router's AP-mode radio will not deliver RX to a *concurrent* monitor
+vif (0 frames), so the capture radio must be dedicated. The laptop stayed on
+5 GHz (router radio1) throughout, keeping the control path up while radio0 was
+borrowed for the capture.
