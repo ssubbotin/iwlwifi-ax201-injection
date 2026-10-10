@@ -1,0 +1,17 @@
+# Kernel module build artifacts
+*.o
+*.ko
+*.cmd
+*.mod
+*.mod.c
+*.mod.o
+*.order
+*.symvers
+.tmp_versions/
+.*.d
+*.a
+# build logs / scratch
+build.log
+*.log
+# DKMS build trees
+dkms/build/
