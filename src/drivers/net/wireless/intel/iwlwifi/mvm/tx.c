@@ -631,6 +631,13 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
 			cmd->flags = cpu_to_le32(flags);
 			cmd->rate_n_flags = rate_n_flags;
 		}
+		if (unlikely(iwlmvm_mod_params.inject_dbg &&
+			     (info->flags & IEEE80211_TX_CTL_INJECTED)))
+			IWL_WARN(mvm,
+				 "inject: set_tx_params fc=0x%04x sta_id=%d host_rate=%d flags=0x%04x rate_n_flags=0x%08x len=%u\n",
+				 le16_to_cpu(hdr->frame_control), sta_id,
+				 iwl_mvm_use_host_rate(mvm, mvmsta, hdr, info),
+				 flags, le32_to_cpu(rate_n_flags), skb->len);
 		goto out;
 	}
 
