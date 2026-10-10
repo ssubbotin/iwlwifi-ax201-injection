@@ -15,7 +15,7 @@ existing stationless (sniffer/aux) queue so they reach the air. See
 ## Status
 
 - **M1** – stock baseline measured: injection 0/30, RX fine. Done.
-- **M2** – out-of-tree / DKMS build of the driver. In progress.
+- **M2** – out-of-tree / DKMS build, loads with Wi-Fi normal. Done.
 - **M3** – queue-routing patch behind a module parameter. Planned.
 - **M4** – unassociated injection captured on a second radio. Planned.
 

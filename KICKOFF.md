@@ -129,8 +129,11 @@ is the AX201 itself. Do not let it creep back in as "the pragmatic path".
 
 - M1: W1 baseline captured and written up. DONE 2026-10-10 (see BASELINE.md):
   stock injection 0/30 (0%) on ch36, RX fine. This is the floor to beat.
-- M2: `backport-iwlwifi` builds, loads, DKMS-packaged; Wi-Fi still normal.
-  PROVEN when the module loads and the laptop stays usable.
+- M2: iwlwifi (from linux-source-7.0.0, 7.0.0-38.38) builds out-of-tree and as
+  a DKMS package; Wi-Fi still normal. DONE 2026-10-10: the DKMS build loads from
+  `updates/dkms/`, firmware 77 negotiates cleanly, laptop stays usable.
+  (Chose the distro kernel's own iwlwifi over backport-iwlwifi: it matches API
+  77 and kernel 7.0 exactly.)
 - M3: Queue-routing step (W3.1) lands behind the module param; injected frames
   reach the firmware. PROVEN by driver-side TX confirmation.
 - M4: Unassociated injection works and is captured on a second adapter.
