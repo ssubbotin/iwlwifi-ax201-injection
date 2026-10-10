@@ -16,8 +16,17 @@ existing stationless (sniffer/aux) queue so they reach the air. See
 
 - **M1** – stock baseline measured: injection 0/30, RX fine. Done.
 - **M2** – out-of-tree / DKMS build, loads with Wi-Fi normal. Done.
-- **M3** – queue-routing patch behind a module parameter. Planned.
-- **M4** – unassociated injection captured on a second radio. Planned.
+- **M3.1** – instrumented TX path; found the real root cause. Done (see
+  [`DIAGNOSIS.md`](DIAGNOSIS.md)): injected frames were dropped in **mac80211**
+  by the regulatory `No IR` gate, before iwlwifi, not for lack of a TX queue.
+- **M3.2 (reg)** – `iwlwifi.inject` param (default off) withholds `NO_IR`.
+  Done: with it, ch36 loses `No IR` and injected frames reach the firmware
+  (0 → 11 TX-ring events); ch9 already worked.
+- **In progress** – injection on the sniffer queue triggers a firmware
+  `Microcode SW error` after a few frames, on both bands. Honouring the
+  radiotap rate / TX_CMD and probing firmware limits is the next work.
+- **M4** – reliable unassociated injection captured on a second radio. Blocked
+  on the firmware-crash fix above.
 
 ## Licence
 
