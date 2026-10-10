@@ -88,6 +88,12 @@ extern const struct ieee80211_ops iwl_mvm_mld_hw_ops;
  */
 struct iwl_mvm_mod_params {
 	int power_scheme;
+	/*
+	 * inject_dbg: when non-zero, log the TX routing decisions taken for
+	 * injected frames (IEEE80211_TX_CTL_INJECTED) on the monitor path.
+	 * Diagnostic only; does not change behaviour.
+	 */
+	int inject_dbg;
 };
 extern struct iwl_mvm_mod_params iwlmvm_mod_params;
 

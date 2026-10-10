@@ -47,6 +47,10 @@ module_param_named(power_scheme, iwlmvm_mod_params.power_scheme, int, 0444);
 MODULE_PARM_DESC(power_scheme,
 		 "power management scheme: 1-active, 2-balanced, 3-low power, default: 2");
 
+module_param_named(inject_dbg, iwlmvm_mod_params.inject_dbg, int, 0644);
+MODULE_PARM_DESC(inject_dbg,
+		 "log injected-frame TX routing decisions on the monitor path (0=off, default 0)");
+
 /*
  * module init and exit functions
  */
