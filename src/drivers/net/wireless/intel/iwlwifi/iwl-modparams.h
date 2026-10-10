@@ -86,6 +86,13 @@ struct iwl_mod_params {
 	bool remove_when_gone;
 	u32 enable_ini;
 	bool disable_11be;
+	/**
+	 * @inject: allow raw 802.11 frame injection from a monitor interface by
+	 * withholding the regulatory NO_IR flag when building the channel list,
+	 * so mac80211 does not drop injected frames before the driver. Default
+	 * false. Read at NVM init, so it takes effect on driver load/reload.
+	 */
+	bool inject;
 };
 
 static inline bool iwl_enable_rx_ampdu(void)

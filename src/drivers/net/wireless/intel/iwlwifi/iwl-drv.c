@@ -2112,6 +2112,9 @@ MODULE_PARM_DESC(amsdu_size,
 		 "4K for other devices 1:4K 2:8K 3:12K (16K buffers) 4: 2K (default 0)");
 module_param_named(fw_restart, iwlwifi_mod_params.fw_restart, bool, 0444);
 MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)");
+module_param_named(inject, iwlwifi_mod_params.inject, bool, 0444);
+MODULE_PARM_DESC(inject,
+		 "allow frame injection by withholding the regulatory NO_IR channel flag (default false)");
 
 module_param_named(nvm_file, iwlwifi_mod_params.nvm_file, charp, 0444);
 MODULE_PARM_DESC(nvm_file, "NVM file name");
