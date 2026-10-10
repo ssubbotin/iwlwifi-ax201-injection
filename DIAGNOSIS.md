@@ -81,3 +81,40 @@ permits injection on any channel including ch36. The parameter lives in the core
 `iwlwifi` module (`iwl_mod_params`) so both `iwl-nvm-parse.c` and the mvm opmode
 can read it. Regulatory tables are derived at NVM init, so the parameter is read
 at module load; changing it takes effect on the next driver reload.
+
+## Confirmation on 2.4 GHz (ch9, no No-IR) — 2026-10-10
+
+Re-ran the traced injection on channel 9 against the owned 2.4 GHz AP
+`cc:d8:43:b2:dd:26` (`CHANNEL=9 AP_BSSID=... m3-diagnose-inject.sh`), same
+instrumented-but-behaviorally-stock driver. Unlike ch36:
+
+- aireplay reported **"Injection is working!"**.
+- `iwlwifi_dev_tx` ring events: **11** (vs 0 on ch36) — frames reached hardware.
+- `inject: mac_tx ... viftype=6 (MONITOR) sta=NULL offchan=0` logs fired: frames
+  now reach iwlwifi and take the non-sta monitor path to `snif_queue`.
+
+This proves the regulatory `No IR` flag is the sole reason ch36 fails, and that
+the AX201 can inject on an IR-allowed channel.
+
+### Second problem, now exposed: firmware instability on the sniffer queue
+
+After the first ~11 frames, the firmware crashed:
+
+```
+iwlwifi 0000:00:14.3: Microcode SW error detected. Restarting 0x0.
+Transport status: 0x0000004A
+Loaded firmware version: 77.f39cc7f9.0 QuZ-a0-hr-b0-77.ucode
+```
+
+`iwl_mvm_tx_skb()` then logged **119** `tx_skb DROP (free_txskb)` for the
+remaining frames (while the firmware was in error/restart), and the directed
+phase read 0/30. The adapter auto-restarted and reconnected; no lasting harm.
+
+So reliable injection needs two things, in order:
+
+1. **Regulatory**: withhold `NO_IR` so mac80211 permits injection on any channel
+   (the `iwlwifi.inject` patch). Primary; unblocks 5 GHz.
+2. **Firmware/TX params**: the sniffer-queue injection path destabilises the
+   microcode after a few frames. Likely the injected frames carry a rate or
+   TX_CMD format the firmware rejects. This is the W3.2 (honour radiotap rate)
+   and W4 (firmware limits) work.

@@ -14,8 +14,8 @@
 set -uo pipefail
 
 IFACE="wlp0s20f3"
-CHANNEL=36
-AP_BSSID="cc:d8:43:b2:dd:27"   # owned AP "Abracadabra", ch36
+CHANNEL=${CHANNEL:-36}
+AP_BSSID=${AP_BSSID:-cc:d8:43:b2:dd:27}
 TR=/sys/kernel/debug/tracing
 MON=""
 PREV_SSID=""
