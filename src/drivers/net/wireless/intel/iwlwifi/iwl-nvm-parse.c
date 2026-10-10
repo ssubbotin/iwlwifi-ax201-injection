@@ -292,11 +292,17 @@ static u32 iwl_get_channel_flags(u8 ch_num, int ch_idx, enum nl80211_band band,
 	if (!(nvm_flags & NVM_CHANNEL_160MHZ))
 		flags |= IEEE80211_CHAN_NO_160MHZ;
 
-	if (!(nvm_flags & NVM_CHANNEL_IBSS))
-		flags |= IEEE80211_CHAN_NO_IR;
+	/*
+	 * inject: withhold NO_IR so mac80211 permits frame injection on this
+	 * channel (cfg80211_reg_can_beacon checks IEEE80211_CHAN_NO_IR).
+	 */
+	if (!iwlwifi_mod_params.inject) {
+		if (!(nvm_flags & NVM_CHANNEL_IBSS))
+			flags |= IEEE80211_CHAN_NO_IR;
 
-	if (!(nvm_flags & NVM_CHANNEL_ACTIVE))
-		flags |= IEEE80211_CHAN_NO_IR;
+		if (!(nvm_flags & NVM_CHANNEL_ACTIVE))
+			flags |= IEEE80211_CHAN_NO_IR;
+	}
 
 	if (nvm_flags & NVM_CHANNEL_RADAR)
 		flags |= IEEE80211_CHAN_RADAR;
@@ -1547,7 +1553,8 @@ u32 iwl_nvm_get_regdom_bw_flags(const u16 *nvm_chan,
 	if (!(nvm_flags & NVM_CHANNEL_160MHZ))
 		flags |= NL80211_RRF_NO_160MHZ;
 
-	if (!(nvm_flags & NVM_CHANNEL_ACTIVE))
+	/* inject: see iwl_nvm_get_channel_flags; withhold NO_IR to allow TX. */
+	if (!iwlwifi_mod_params.inject && !(nvm_flags & NVM_CHANNEL_ACTIVE))
 		flags |= NL80211_RRF_NO_IR;
 
 	if (nvm_flags & NVM_CHANNEL_RADAR)
